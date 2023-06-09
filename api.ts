@@ -18,7 +18,7 @@ const client = axiod.create({
 
 export const auth = async () => {
   const authData: AuthPostData = {
-    password: env.PASSWORD,
+    password: env.ACCLI_PASSWORD,
     username: env.ACCLI_USERNAME,
   };
 
