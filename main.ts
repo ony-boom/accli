@@ -3,7 +3,7 @@ import { parse } from "./deps.ts";
 import { isValidCommand } from "./types.ts";
 
 const flags = parse(Deno.args, {
-  boolean: ["help"],
+  boolean: ["help", "aS"],
   string: ["path", "ln", "episode", "season", "page", "fileId", "renameTo"],
 });
 
@@ -35,27 +35,30 @@ if (isValidCommand(commandLike)) {
       const fileId = flags.fileId;
       const searchQuery = flags._[1];
 
-      if (!searchQuery && fileId) {
+      if (!searchQuery && !fileId) {
         throw new Error("Please give the anime name to download or the fileID");
       }
 
-      await download(
-        flags.path,
-        {
+      await download({
+        downloadParams: {
+          path: flags.path!,
+          fileId: Number(fileId),
+          renameTo: flags.renameTo,
+          downloadAllSeason: flags.aS,
+        },
+        queryParams: {
           query: String(searchQuery),
           ln: flags.ln,
           episode: Number(flags.episode),
           season: Number(flags.season),
           page: Number(flags.page),
         },
-        Number(fileId),
-        flags.renameTo
-      );
+      });
 
       break;
 
     default:
-      console.log("others");
+      console.log("To lazy to implement this XD");
       break;
   }
 }

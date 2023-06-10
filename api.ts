@@ -2,12 +2,19 @@ import { setAuthToken, getToken } from "./tokenManager.ts";
 import {
   AuthPostData,
   AuthResponse,
+  DownloadParams,
   DownloadResponse,
   SearchData,
   SearchParams,
 } from "./types.ts";
 import { env } from "./config.ts";
 import { axiod, join } from "./deps.ts";
+import {
+  decompressZipped,
+  getUserChosenSubtitle,
+  processSubtitleFiles,
+  saveFile,
+} from "./utils.ts";
 
 const client = axiod.create({
   baseURL: "https://api.opensubtitles.com/api/v1",
@@ -15,6 +22,9 @@ const client = axiod.create({
     "Api-Key": env.ACCLI_API_KEY,
   },
 });
+
+const getSeasonDownloadLink = (imDbId: number) =>
+  `https://www.opensubtitles.org/download/s/sublanguageid-fre/pimdbid-${imDbId}/season-1`;
 
 export const auth = async () => {
   const authData: AuthPostData = {
@@ -83,65 +93,97 @@ export const search = async ({
   return searchResult;
 };
 
-export const download = async (
-  path = ".",
-  param: SearchParams,
-  fileId?: number,
-  renameTo?: string
-) => {
+export const download = async ({
+  queryParams,
+  downloadParams: { path = "./", fileId, renameTo, downloadAllSeason },
+}: DownloadParams) => {
   let file_id = 0;
+  let seasonImDbId = 0;
+  let title = "";
 
   if (fileId) {
     file_id = fileId;
   } else {
-    const searchResult = await search(param);
+    const searchResult = await search(queryParams);
 
-    let chosenSubtitleIndex = prompt("\nWhich subtitle to download ? :", "1");
+    const chosenSubtitle = getUserChosenSubtitle(
+      searchResult,
+      downloadAllSeason
+    );
 
-    while (!chosenSubtitleIndex) {
-      chosenSubtitleIndex = prompt(
-        "Select subtitle to download, subtitle index",
-        "0"
-      );
-    }
+    title = chosenSubtitle.feature_details.parent_title;
 
-    const chosenSubtitle = searchResult[Number(chosenSubtitleIndex) - 1];
+    file_id = chosenSubtitle.files[0].file_id;
 
-    file_id = chosenSubtitle.attributes.files[0].file_id;
+    seasonImDbId = downloadAllSeason
+      ? chosenSubtitle.feature_details.parent_imdb_id
+      : 0;
   }
 
   try {
     console.log("Downloading... ⌛");
-
-    const token = await getToken();
-
-    const { data } = await client.post<DownloadResponse>(
-      "/download",
-      {
-        file_id,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Api-Key": env.ACCLI_API_KEY,
-        },
-      }
-    );
-
-    const { data: subtitle } = await axiod.get<string>(data.link);
-    const extension = data.file_name.slice(data.file_name.lastIndexOf(".") + 1);
-
-    const fileName = renameTo ? `${renameTo}.${extension}` : data.file_name;
-
-    console.log(renameTo);
-
-    const filePath = join(path, fileName);
-
-    await Deno.writeTextFile(filePath, subtitle, { create: true });
-
-    console.log("Downloaded ✅");
-    console.log(`File saved at ${filePath}`);
+    if (downloadAllSeason) {
+      await seasonDownload(seasonImDbId, title, path, renameTo);
+    } else {
+      await episodeDownload(file_id, path, renameTo);
+    }
+    console.log("Done ✅");
   } catch (error) {
     console.log(error);
   }
+};
+
+const getSubtitleDownloadInfo = async (file_id: number, token: string) => {
+  const { data } = await client.post<DownloadResponse>(
+    "/download",
+    {
+      file_id,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Api-Key": env.ACCLI_API_KEY,
+      },
+    }
+  );
+
+  return data;
+};
+
+const episodeDownload = async (
+  file_id: number,
+  path: string,
+  renameTo?: string
+) => {
+  const token = await getToken();
+  const { link, file_name } = await getSubtitleDownloadInfo(file_id, token);
+
+  const { data: subtitle } = await axiod.get<string>(link);
+
+  const fileSavedAt = await saveFile(path, subtitle, file_name, renameTo);
+  console.log(`File saved at ${fileSavedAt}`);
+};
+
+const seasonDownload = async (
+  seasonImDbId: number,
+  title: string,
+  path: string,
+  renameTo?: string
+) => {
+  const seasonLink = getSeasonDownloadLink(seasonImDbId);
+
+  const newTitle = title.match(/[a-z ]/gi)!.join("");
+
+  const filePath = join(path, `${newTitle}.zip`);
+
+  const { data: arrayBuffer } = await axiod.get<ArrayBuffer>(seasonLink, {
+    responseType: "arraybuffer",
+  });
+  const fileData = new Uint8Array(arrayBuffer);
+
+  await Deno.writeFile(filePath, fileData, { create: true });
+
+  await decompressZipped(filePath);
+
+  await processSubtitleFiles(renameTo);
 };

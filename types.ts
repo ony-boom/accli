@@ -43,7 +43,7 @@ export interface SearchData {
   data: Datum[];
 }
 
-interface Datum {
+export interface Datum {
   id: string;
   type: string;
   attributes: Attributes;
@@ -105,12 +105,21 @@ export interface RelatedLinks {
 }
 
 export interface DownloadResponse {
-  link: string
-  file_name: string
-  requests: number
-  remaining: number
-  message: string
-  reset_time: string
-  reset_time_utc: string
+  link: string;
+  file_name: string;
+  requests: number;
+  remaining: number;
+  message: string;
+  reset_time: string;
+  reset_time_utc: string;
 }
 
+export interface DownloadParams {
+  queryParams: SearchParams;
+  downloadParams: {
+    path: string;
+    fileId?: number;
+    renameTo?: string;
+    downloadAllSeason: boolean
+  };
+}
