@@ -1,5 +1,5 @@
-import { existsSync } from "https://deno.land/std@0.190.0/fs/mod.ts";
 import { tokenFilePath } from "./config.ts";
+import { existsSync } from "./deps.ts";
 
 export const setAuthToken = async (token: string) => {
   try {
