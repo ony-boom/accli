@@ -2,6 +2,9 @@
 
 Another useless cli, just to download anime subtitle XD
 
+## Dependency 
+ - unzip
+
 ## ☑️ TODO
 
 - [ ] Better `tui`
