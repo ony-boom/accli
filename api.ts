@@ -85,6 +85,11 @@ export const search = async ({
 
   console.log(" \nResult: ");
 
+  if (searchResult.length === 0) {
+    console.log("No subtitle for this one 🥲");
+    Deno.exit(1)
+  }
+
   for (let i = 0; i < searchResult.length; i++) {
     const result = searchResult[i];
     console.log(`[${i + 1}]:`, result.attributes.feature_details.title);
