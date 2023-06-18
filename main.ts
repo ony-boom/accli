@@ -4,7 +4,16 @@ import { isValidCommand } from "./types.ts";
 
 const flags = parse(Deno.args, {
   boolean: ["help", "aS"],
-  string: ["path", "ln", "episode", "season", "page", "fileId", "renameTo"],
+  string: [
+    "path",
+    "ln",
+    "episode",
+    "season",
+    "page",
+    "fileId",
+    "renameTo",
+    "range",
+  ],
 });
 
 const commandLike = flags._[0];
@@ -39,12 +48,15 @@ if (isValidCommand(commandLike)) {
         throw new Error("Please give the anime name to download or the fileID");
       }
 
+      const range = flags.range?.split("..").map(Number) as [number, number] | undefined;
+
       await download({
         downloadParams: {
           path: flags.path!,
           fileId: Number(fileId),
           renameTo: flags.renameTo,
           downloadAllSeason: flags.aS,
+          range,
         },
         queryParams: {
           query: String(searchQuery),

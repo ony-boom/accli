@@ -120,6 +120,15 @@ export interface DownloadParams {
     path: string;
     fileId?: number;
     renameTo?: string;
-    downloadAllSeason: boolean
+    downloadAllSeason?: boolean;
+    range?: Range;
+    prompt?: boolean;
   };
+}
+
+export type Range = [number, number];
+
+// deno-lint-ignore no-explicit-any
+export function isRange(rangeLike: any): rangeLike is Range {
+  return Array.isArray(rangeLike) && rangeLike.length === 2;
 }

@@ -4,8 +4,10 @@ import {
   AuthResponse,
   DownloadParams,
   DownloadResponse,
+  Range,
   SearchData,
   SearchParams,
+  isRange,
 } from "./types.ts";
 import { env } from "./config.ts";
 import { axiod, join } from "./deps.ts";
@@ -15,6 +17,7 @@ import {
   processSubtitleFiles,
   saveFile,
 } from "./utils.ts";
+import { _format } from "https://deno.land/std@0.190.0/path/_util.ts";
 
 const client = axiod.create({
   baseURL: "https://api.opensubtitles.com/api/v1",
@@ -87,7 +90,7 @@ export const search = async ({
 
   if (searchResult.length === 0) {
     console.log("No subtitle for this one 🥲");
-    Deno.exit(1)
+    Deno.exit(1);
   }
 
   for (let i = 0; i < searchResult.length; i++) {
@@ -100,21 +103,36 @@ export const search = async ({
 
 export const download = async ({
   queryParams,
-  downloadParams: { path = "./", fileId, renameTo, downloadAllSeason },
+  downloadParams: {
+    path = "./",
+    fileId,
+    renameTo,
+    downloadAllSeason = false,
+    range,
+    prompt = true,
+  },
 }: DownloadParams) => {
-  let file_id = 0;
+  let file_id: number;
   let seasonImDbId = 0;
   let title = "";
+
+  if (isRange(range)) {
+    const downloadParamCopy: DownloadParams = {
+      downloadParams: { path, fileId, renameTo },
+      queryParams,
+    };
+    rangeDownload(range, downloadParamCopy);
+    return;
+  }
 
   if (fileId) {
     file_id = fileId;
   } else {
     const searchResult = await search(queryParams);
 
-    const chosenSubtitle = getUserChosenSubtitle(
-      searchResult,
-      downloadAllSeason
-    );
+    const chosenSubtitle = prompt
+      ? getUserChosenSubtitle(searchResult, downloadAllSeason)
+      : searchResult[0].attributes;
 
     title = chosenSubtitle.feature_details.parent_title;
 
@@ -136,6 +154,38 @@ export const download = async ({
   } catch (error) {
     console.log(error);
   }
+};
+
+const rangeDownload = async (range: Range, downloadParams: DownloadParams) => {
+  const [start, end] = range;
+
+  const rangeArray = Array(end - start + 1)
+    .fill(1)
+    .map((num, index) => {
+      const episodeNumber = num * start + index;
+      const stringEpisodeNumber =
+        String(episodeNumber).length > 1
+          ? String(episodeNumber)
+          : `0${episodeNumber}`;
+
+      const updatedDownloadParam: DownloadParams = {
+        downloadParams: {
+          ...downloadParams.downloadParams,
+          renameTo: downloadParams.downloadParams.renameTo?.replace(
+            "%I%",
+            stringEpisodeNumber
+          ),
+          prompt: false,
+        },
+        queryParams: {
+          ...downloadParams.queryParams,
+          episode: episodeNumber, 
+        },
+      };
+      return download(updatedDownloadParam);
+    });
+
+  return await Promise.allSettled(rangeArray);
 };
 
 const getSubtitleDownloadInfo = async (file_id: number, token: string) => {
