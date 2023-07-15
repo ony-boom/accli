@@ -1,4 +1,4 @@
-import { auth, search, download } from "./api.ts";
+import { auth, download, search } from "./api.ts";
 import { parse } from "./deps.ts";
 import { isValidCommand } from "./types.ts";
 
@@ -48,7 +48,9 @@ if (isValidCommand(commandLike)) {
         throw new Error("Please give the anime name to download or the fileID");
       }
 
-      const range = flags.range?.split("..").map(Number) as [number, number] | undefined;
+      const range = flags.range?.split("..").map(Number) as
+        | [number, number]
+        | undefined;
 
       await download({
         downloadParams: {

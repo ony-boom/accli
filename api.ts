@@ -163,23 +163,22 @@ const rangeDownload = async (range: Range, downloadParams: DownloadParams) => {
     .fill(1)
     .map((num, index) => {
       const episodeNumber = num * start + index;
-      const stringEpisodeNumber =
-        String(episodeNumber).length > 1
-          ? String(episodeNumber)
-          : `0${episodeNumber}`;
+      const stringEpisodeNumber = String(episodeNumber).length > 1
+        ? String(episodeNumber)
+        : `0${episodeNumber}`;
 
       const updatedDownloadParam: DownloadParams = {
         downloadParams: {
           ...downloadParams.downloadParams,
           renameTo: downloadParams.downloadParams.renameTo?.replace(
             "%I%",
-            stringEpisodeNumber
+            stringEpisodeNumber,
           ),
           prompt: false,
         },
         queryParams: {
           ...downloadParams.queryParams,
-          episode: episodeNumber, 
+          episode: episodeNumber,
         },
       };
       return download(updatedDownloadParam);
@@ -199,7 +198,7 @@ const getSubtitleDownloadInfo = async (file_id: number, token: string) => {
         Authorization: `Bearer ${token}`,
         "Api-Key": env.ACCLI_API_KEY,
       },
-    }
+    },
   );
 
   return data;
@@ -208,7 +207,7 @@ const getSubtitleDownloadInfo = async (file_id: number, token: string) => {
 const episodeDownload = async (
   file_id: number,
   path: string,
-  renameTo?: string
+  renameTo?: string,
 ) => {
   const token = await getToken();
   const { link, file_name } = await getSubtitleDownloadInfo(file_id, token);
@@ -223,7 +222,7 @@ const seasonDownload = async (
   seasonImDbId: number,
   title: string,
   path: string,
-  renameTo?: string
+  renameTo?: string,
 ) => {
   const seasonLink = getSeasonDownloadLink(seasonImDbId);
 
