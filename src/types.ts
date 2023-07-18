@@ -115,11 +115,7 @@ export interface DownloadResponse {
 }
 
 export interface DownloadParams {
-  queryParams: SearchParams;
-  downloadParams: {
     path: string;
-    fileId?: number;
+    fileId: number;
     renameTo?: string;
-    downloadAllSeason: boolean
-  };
 }
