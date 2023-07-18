@@ -1,4 +1,11 @@
-import { setAuthToken, getToken } from "./tokenManager.ts";
+import {
+  setAuthToken,
+  getToken,
+  decompressZipped,
+  processSubtitleFiles,
+  saveFile,
+} from "@lib";
+
 import {
   AuthPostData,
   AuthResponse,
@@ -6,28 +13,26 @@ import {
   DownloadResponse,
   SearchData,
   SearchParams,
-} from "./types.ts";
-import { env } from "./config.ts";
-import { axiod, join, wait } from "./deps.ts";
-import { decompressZipped, processSubtitleFiles, saveFile } from "./utils.ts";
-import { isGlob } from "https://deno.land/std@0.190.0/path/glob.ts";
+} from "@types";
+import { DEFAULT_APP_NAME, config, tweaks } from "@config";
+import { axiod, join, wait } from "@deps";
 
 const client = axiod.create({
   baseURL: "https://api.opensubtitles.com/api/v1",
   headers: {
-    "Api-Key": env.ACCLI_API_KEY,
+    "Api-Key": config.apiKey,
   },
 });
 
-let spinner = wait("Downloading...⌛");
+const spinner = wait("Downloading...⌛");
 
 const getSeasonDownloadLink = (imDbId: number) =>
   `https://www.opensubtitles.org/download/s/sublanguageid-fre/pimdbid-${imDbId}/season-1`;
 
 export const auth = async () => {
   const authData: AuthPostData = {
-    password: env.ACCLI_PASSWORD,
-    username: env.ACCLI_USERNAME,
+    password: config.password,
+    username: config.username,
   };
 
   try {
@@ -104,9 +109,9 @@ export const download = async ({
   try {
     spinner.start();
     await episodeDownload(fileId, path, renameTo);
-  } catch (error) {
+  } catch {
     spinner.stop();
-    console.log(error);
+    console.error("Something bad happened 😵, try again");
   }
 };
 
@@ -119,7 +124,7 @@ const getSubtitleDownloadInfo = async (file_id: number, token: string) => {
     {
       headers: {
         Authorization: `Bearer ${token}`,
-        "Api-Key": env.ACCLI_API_KEY,
+        "Api-Key": config.apiKey,
       },
     }
   );
@@ -142,6 +147,7 @@ const episodeDownload = async (
   const fileSavedAt = await saveFile(path, subtitle, file_name, renameTo);
 
   spinner.succeed(`File saved at ${fileSavedAt}`);
+  spinner.stop();
   spinner.clear();
 };
 
@@ -167,4 +173,25 @@ const seasonDownload = async (
   await decompressZipped(filePath);
 
   await processSubtitleFiles(renameTo);
+};
+
+export const getAppNameArt = async () => {
+  const url = "https://asciified.thelicato.io/api";
+
+  if (tweaks.appName) {
+    try {
+      const { data } = await axiod.get<string>(`${url}`, {
+        params: {
+          font: "ANSI Shadow",
+          text: tweaks.appName || "accli",
+        },
+        responseType: "text",
+      });
+
+      return data;
+    } catch {
+      /* Do nothing */
+    }
+  }
+  return DEFAULT_APP_NAME;
 };

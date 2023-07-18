@@ -1,5 +1,3 @@
-import {gradient} from "./deps.ts";
-
 const asciiAppName = `
  ________  ________  ________  ___       ___     
 |\\   __  \\|\\   ____\\|\\   ____\\|\\  \\     |\\  \\    
@@ -10,4 +8,4 @@ const asciiAppName = `
     \\|__|\\|__|\\|_______|\\|_______|\\|_______|\\|__|                                                 
 `
 
-export const APP_NAME = gradient.pastel(asciiAppName)
+export const DEFAULT_APP_NAME = asciiAppName;

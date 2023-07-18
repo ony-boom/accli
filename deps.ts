@@ -11,7 +11,7 @@ import gradient from "npm:gradient-string@2.0.2";
 import * as cliffy from "https://deno.land/x/cliffy@v1.0.0-rc.2/prompt/mod.ts";
 import * as colors from "https://deno.land/x/cliffy@v1.0.0-rc.2/ansi/mod.ts";
 import { wait, Spinner } from "https://deno.land/x/wait@0.1.13/mod.ts";
-
+import { parse } from "https://deno.land/std@0.194.0/toml/mod.ts";
 
 export {
   axiod,
@@ -25,5 +25,6 @@ export {
   colors,
   cliffy,
   wait,
-  Spinner
+  Spinner,
+  parse
 };

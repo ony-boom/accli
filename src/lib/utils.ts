@@ -1,5 +1,9 @@
-import { cliffy, colors, join, walk } from "./deps.ts";
-import { Datum } from "./types.ts";
+import { tweaks } from "@config";
+import { gradient } from "@deps";
+import { getAppNameArt } from "@api";
+
+import { cliffy, colors, join, walk } from "@deps";
+import { Datum } from "@types";
 
 const TEMP_DIR = ".temp_sub_dir";
 
@@ -74,7 +78,7 @@ export const processSubtitleFiles = async (renameString?: string) => {
   await Deno.remove(TEMP_DIR, { recursive: true });
 };
 
-export const outputResult = async (data: Datum[]) => {
+export const getChosenSubtitle = async (data: Datum[]) => {
   const chosenSubtitle = await cliffy.Checkbox.prompt({
     message: "Choose which subtitle to download",
     options: data
@@ -112,7 +116,7 @@ export const outputResult = async (data: Datum[]) => {
                 episode.toLocaleString("en-US", { minimumIntegerDigits: 2 }) +
                 " "
               : ""
-          }${colors.colors.gray(episodeTitle)}`,
+          }${colors.colors.yellow(episodeTitle)}`,
         };
       }),
     check: colors.colors.green("󰄯"),
@@ -121,4 +125,11 @@ export const outputResult = async (data: Datum[]) => {
     info: true,
   });
   return chosenSubtitle as unknown as { episode: number; fileID: number }[];
+};
+
+export const showAppName = async () => {
+  if (tweaks.showAppName) {
+    const appName = gradient.pastel(await getAppNameArt());
+    console.log(appName);
+  }
 };

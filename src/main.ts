@@ -1,10 +1,9 @@
-import { download, search } from "./api.ts";
-import { APP_NAME } from "./constant.ts";
-import { cliffy, colors } from "./deps.ts";
-import { outputResult } from "./utils.ts";
+import { cliffy, colors } from "@deps";
+import { download, search } from "@api";
+import { getChosenSubtitle, showAppName } from "@lib";
 
-console.log(APP_NAME);
 console.log("\n");
+await showAppName();
 
 const queryParams = await cliffy.prompt([
   {
@@ -32,7 +31,7 @@ const searchResult = await search({
 });
 
 if (searchResult.length > 0) {
-  const chosenSubtitle = await outputResult(searchResult);
+  const chosenSubtitle = await getChosenSubtitle(searchResult);
 
   const renameFileTo = await cliffy.Input.prompt({
     message: "Rename downloaded subtitle to ?",
