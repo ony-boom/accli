@@ -124,7 +124,7 @@ export const getChosenSubtitle = async (data: Datum[]) => {
     hint: `Press ${colors.colors.blue("<space> 󱁐")} to select subtitle`,
     info: true,
   });
-  return chosenSubtitle as unknown as { episode: number; fileID: number }[];
+  return chosenSubtitle as unknown as { episode?: number; fileID: number }[];
 };
 
 export const showAppName = async () => {

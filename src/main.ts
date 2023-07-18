@@ -44,7 +44,7 @@ if (searchResult.length > 0) {
     let renameTo: string | undefined;
 
     if (renameFileTo) {
-      renameTo = renameFileTo.replace("%I%", episode.toString());
+      renameTo = renameFileTo.replace("%I%", episode?.toString() || "");
     }
 
     return download({ fileId: fileID, path: "./", renameTo });
