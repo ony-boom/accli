@@ -8,13 +8,9 @@ import {
   SearchParams,
 } from "./types.ts";
 import { env } from "./config.ts";
-import { axiod, join } from "./deps.ts";
-import {
-  decompressZipped,
-  getUserChosenSubtitle,
-  processSubtitleFiles,
-  saveFile,
-} from "./utils.ts";
+import { axiod, join, wait } from "./deps.ts";
+import { decompressZipped, processSubtitleFiles, saveFile } from "./utils.ts";
+import { isGlob } from "https://deno.land/std@0.190.0/path/glob.ts";
 
 const client = axiod.create({
   baseURL: "https://api.opensubtitles.com/api/v1",
@@ -22,6 +18,8 @@ const client = axiod.create({
     "Api-Key": env.ACCLI_API_KEY,
   },
 });
+
+let spinner = wait("Downloading...⌛");
 
 const getSeasonDownloadLink = (imDbId: number) =>
   `https://www.opensubtitles.org/download/s/sublanguageid-fre/pimdbid-${imDbId}/season-1`;
@@ -44,6 +42,7 @@ export const auth = async () => {
   } catch (error) {
     console.error(
       "Authentication error 💥 \n",
+
       "It's seems that something went wrong, may be you are offline",
       "The reason:\n",
       error
@@ -66,6 +65,10 @@ export const search = async ({
     { page },
   ];
 
+  spinner.text = "Searching...🔍";
+
+  spinner.start();
+
   const queryParams: Record<string, string | number> = {};
 
   for (const param of extraParamList) {
@@ -83,57 +86,26 @@ export const search = async ({
     params: { query, languages: ln, ...queryParams },
   });
 
-  console.log(" \nResult: ");
-
   if (searchResult.length === 0) {
-    console.log("No subtitle for this one 🥲");
-    Deno.exit(1)
+    console.error("No subtitle for this one 🥲");
+    Deno.exit(1);
   }
 
-  for (let i = 0; i < searchResult.length; i++) {
-    const result = searchResult[i];
-    console.log(`[${i + 1}]:`, result.attributes.feature_details.title);
-  }
-
+  spinner.stop();
   return searchResult;
 };
 
 export const download = async ({
-  queryParams,
-  downloadParams: { path = "./", fileId, renameTo, downloadAllSeason },
+  path = "./",
+  fileId,
+  renameTo,
 }: DownloadParams) => {
-  let file_id = 0;
-  let seasonImDbId = 0;
-  let title = "";
-
-  if (fileId) {
-    file_id = fileId;
-  } else {
-    const searchResult = await search(queryParams);
-
-    const chosenSubtitle = getUserChosenSubtitle(
-      searchResult,
-      downloadAllSeason
-    );
-
-    title = chosenSubtitle.feature_details.parent_title;
-
-    file_id = chosenSubtitle.files[0].file_id;
-
-    seasonImDbId = downloadAllSeason
-      ? chosenSubtitle.feature_details.parent_imdb_id
-      : 0;
-  }
-
+  spinner.text = "Downloading...⌛";
   try {
-    console.log("Downloading... ⌛");
-    if (downloadAllSeason) {
-      await seasonDownload(seasonImDbId, title, path, renameTo);
-    } else {
-      await episodeDownload(file_id, path, renameTo);
-    }
-    console.log("Done ✅");
+    spinner.start();
+    await episodeDownload(fileId, path, renameTo);
   } catch (error) {
+    spinner.stop();
     console.log(error);
   }
 };
@@ -165,8 +137,12 @@ const episodeDownload = async (
 
   const { data: subtitle } = await axiod.get<string>(link);
 
+  spinner.text = "Saving file... 🗃️";
+
   const fileSavedAt = await saveFile(path, subtitle, file_name, renameTo);
-  console.log(`File saved at ${fileSavedAt}`);
+
+  spinner.succeed(`File saved at ${fileSavedAt}`);
+  spinner.clear();
 };
 
 const seasonDownload = async (

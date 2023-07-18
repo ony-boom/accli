@@ -1,64 +1,55 @@
-import { auth, search, download } from "./api.ts";
-import { parse } from "./deps.ts";
-import { isValidCommand } from "./types.ts";
+import { download, search } from "./api.ts";
+import { APP_NAME } from "./constant.ts";
+import { cliffy, colors } from "./deps.ts";
+import { outputResult } from "./utils.ts";
 
-const flags = parse(Deno.args, {
-  boolean: ["help", "aS"],
-  string: ["path", "ln", "episode", "season", "page", "fileId", "renameTo"],
+console.log(APP_NAME);
+console.log("\n");
+
+const queryParams = await cliffy.prompt([
+  {
+    type: cliffy.Input,
+    name: "query",
+    message: "Anime name",
+    validate(value) {
+      return Boolean(value);
+    },
+  },
+
+  {
+    name: "ln",
+    type: cliffy.Select,
+    options: ["fr", "en"],
+    message: "Subtitle language",
+    default: "en",
+    pointer: "",
+  },
+]);
+
+const searchResult = await search({
+  query: queryParams.query!,
+  ln: queryParams.ln,
 });
 
-const commandLike = flags._[0];
+if (searchResult.length > 0) {
+  const chosenSubtitle = await outputResult(searchResult);
 
-if (isValidCommand(commandLike)) {
-  switch (commandLike) {
-    case "auth":
-      await auth();
-      break;
+  const renameFileTo = await cliffy.Input.prompt({
+    message: "Rename downloaded subtitle to ?",
+    hint: colors.colors.gray(
+      `${colors.colors.italic("%I%")} will be replaced by episode number`
+    ),
+  });
 
-    // deno-lint-ignore no-case-declarations
-    case "search":
-      const query = flags._[1];
-      if (!query) {
-        throw new Error("Please give the anime name to search");
-      }
-      await search({
-        query: String(query),
-        ln: flags.ln,
-        episode: Number(flags.episode),
-        season: Number(flags.season),
-        page: Number(flags.page),
-      });
-      break;
+  const chosenDownload = chosenSubtitle.map(({ fileID, episode }) => {
+    let renameTo: string | undefined;
 
-    // deno-lint-ignore no-case-declarations
-    case "download":
-      const fileId = flags.fileId;
-      const searchQuery = flags._[1];
+    if (renameFileTo) {
+      renameTo = renameFileTo.replace("%I%", episode.toString());
+    }
 
-      if (!searchQuery && !fileId) {
-        throw new Error("Please give the anime name to download or the fileID");
-      }
+    return download({ fileId: fileID, path: "./", renameTo });
+  });
 
-      await download({
-        downloadParams: {
-          path: flags.path!,
-          fileId: Number(fileId),
-          renameTo: flags.renameTo,
-          downloadAllSeason: flags.aS,
-        },
-        queryParams: {
-          query: String(searchQuery),
-          ln: flags.ln,
-          episode: Number(flags.episode),
-          season: Number(flags.season),
-          page: Number(flags.page),
-        },
-      });
-
-      break;
-
-    default:
-      console.log("To lazy to implement this XD");
-      break;
-  }
+  await Promise.allSettled(chosenDownload).then(() => Deno.exit());
 }

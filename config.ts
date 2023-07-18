@@ -17,3 +17,4 @@ if (os.homeDir()) {
   tokenFilePath = tokenFilePath.replace("~/", "");
   tokenFilePath = join(os.homeDir()!, tokenFilePath);
 }
+

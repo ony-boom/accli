@@ -1,4 +1,4 @@
-import { join, walk } from "./deps.ts";
+import { cliffy, colors, join, walk } from "./deps.ts";
 import { Datum } from "./types.ts";
 
 const TEMP_DIR = ".temp_sub_dir";
@@ -20,19 +20,6 @@ export const saveFile = async (
   await Deno.writeTextFile(filePath, content, { create: true });
 
   return filePath;
-};
-
-export const getUserChosenSubtitle = (
-  searchResult: Datum[],
-  isASeasonDownload: boolean
-) => {
-  const message = isASeasonDownload
-    ? "Please select the subtitle, season related to this subtitle will be downloaded"
-    : "Which subtitle to download ? :";
-
-  const chosenSubtitleIndex = prompt(`\n${message}`, "1");
-
-  return searchResult[Number(chosenSubtitleIndex) - 1].attributes;
 };
 
 export const decompressZipped = async (zipPath: string) => {
@@ -85,4 +72,53 @@ export const processSubtitleFiles = async (renameString?: string) => {
   }
 
   await Deno.remove(TEMP_DIR, { recursive: true });
+};
+
+export const outputResult = async (data: Datum[]) => {
+  const chosenSubtitle = await cliffy.Checkbox.prompt({
+    message: "Choose which subtitle to download",
+    options: data
+      .toSorted(
+        (a, b) =>
+          a.attributes.feature_details.season_number
+            ?.toString()
+            .localeCompare(
+              b.attributes.feature_details.season_number?.toString()
+            ) ||
+          a.attributes.feature_details.episode_number -
+            b.attributes.feature_details.episode_number
+      )
+      .map((subtitle) => {
+        const fileID = subtitle.attributes.files[0].file_id;
+        const mainTitle = subtitle.attributes.feature_details.parent_title;
+        const episode = subtitle.attributes.feature_details.episode_number;
+        const episodeTitle = subtitle.attributes.feature_details.title;
+        const season = subtitle.attributes.feature_details.season_number;
+
+        return {
+          value: { fileID, episode },
+          episode,
+          name: `${mainTitle ? `${mainTitle} : ` : ""}${
+            season
+              ? "S" +
+                season.toLocaleString("en-US", {
+                  minimumIntegerDigits: 2,
+                }) +
+                "-"
+              : ""
+          }${
+            episode
+              ? "E" +
+                episode.toLocaleString("en-US", { minimumIntegerDigits: 2 }) +
+                " "
+              : ""
+          }${colors.colors.gray(episodeTitle)}`,
+        };
+      }),
+    check: colors.colors.green("󰄯"),
+    uncheck: "󰄰",
+    hint: `Press ${colors.colors.blue("<space> 󱁐")} to select subtitle`,
+    info: true,
+  });
+  return chosenSubtitle as unknown as { episode: number; fileID: number }[];
 };
