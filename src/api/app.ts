@@ -9,7 +9,7 @@ export const getAppNameArt = async () => {
       const { data } = await axiod.get<string>(`${url}`, {
         params: {
           font: tweaks.asciiFont || "ANSI Shadow",
-          text: (tweaks.appName || "accli").replaceAll(" ", "+"),
+          text: tweaks.appName || "accli",
         },
         responseType: "text",
       });
