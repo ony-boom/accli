@@ -19,3 +19,4 @@ See [config.example.toml]
 
 - [ ] Better error handling
 - [ ] Add support for [anime tosho](https://animetosho.org/) attachments file
+
