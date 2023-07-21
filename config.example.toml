@@ -7,3 +7,7 @@ tokenPath = "<WHERE TO STORE TOKEN AFTER AUTH>" # default to : "~/.accli_token.t
 [tweaks]
 appName = "accli" # The ascii art to show at startup
 showAppName = true # show the ascii art
+
+[tweaks.language]
+list = ["en", "fr"] # All language to show when searching subtitle
+default = "fr" # the default checked language

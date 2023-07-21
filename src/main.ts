@@ -1,6 +1,8 @@
+import { tweaks } from "@config";
 import { cliffy, colors } from "@deps";
 import { download, search } from "@api";
 import { getChosenSubtitle, showAppName } from "@lib";
+import { Datum } from "@types";
 
 console.log("\n");
 await showAppName();
@@ -18,17 +20,17 @@ const queryParams = await cliffy.prompt([
   {
     name: "ln",
     type: cliffy.Select,
-    options: ["fr", "en"],
+    options: tweaks.language?.list || ["fr", "en"],
     message: "Subtitle language",
-    default: "en",
+    default: tweaks.language?.default || "en",
     pointer: "",
   },
 ]);
 
-const searchResult = await search({
+const searchResult = (await search({
   query: queryParams.query!,
   ln: queryParams.ln,
-});
+})) as Datum[];
 
 if (searchResult.length > 0) {
   const chosenSubtitle = await getChosenSubtitle(searchResult);
