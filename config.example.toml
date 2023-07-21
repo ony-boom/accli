@@ -1,0 +1,9 @@
+[config]
+apiKey = "<OPEN SUBTITLE API KEY>"
+username = "<OPEN SUBTITLE USERNAME>"
+password = "<OPEN SUBTITLE PASSWORD>"
+tokenPath = "<WHERE TO STORE TOKEN AFTER AUTH>" # default to : "~/.accli_token.txt"
+
+[tweaks]
+appName = "accli" # The ascii art to show at startup
+showAppName = true # show the ascii art
