@@ -18,6 +18,7 @@ const configSchema = z.object({
   tweaks: z.object({
     appName: z.optional(z.string()),
     showAppName: z.optional(z.boolean()),
+    asciiFont: z.optional(z.string()),
     language: z.optional(
       z.object({
         list: z.array(z.string()),
