@@ -2,10 +2,21 @@
 
 Another useless cli, just to download anime subtitle XD
 
-## Dependency 
- - unzip
+## Usage
 
-## ☑️ TODO
+![Usage](./demo.gif)
 
-- [X] Better `tui`
-- [ ] Docs _even though I'm Lazy_
+## Config ⚙️
+
+Config file at `~/accli.toml`
+See [config.example.toml]
+
+## Dependency
+
+- unzip
+
+## TODO
+
+- [ ] Better error handling
+- [ ] Add support for [anime tosho](https://animetosho.org/) attachments file
+
