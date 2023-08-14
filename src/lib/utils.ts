@@ -2,12 +2,10 @@ import { tweaks } from "@config";
 import { gradient } from "@deps";
 import { getAppNameArt } from "@api";
 
-import { cliffy, colors, join, walk } from "@deps";
-import { Datum } from "@types";
+import { cliffy, colors, join } from "@deps";
+import { Subtitle, ToshoResult } from "@types";
 
-const TEMP_DIR = ".temp_sub_dir";
-
-const getExtension = (file: string) => file.slice(file.lastIndexOf(".") + 1);
+export const getExtension = (file: string) => file.slice(file.lastIndexOf(".") + 1);
 
 export const saveFile = async (
   path: string,
@@ -26,105 +24,75 @@ export const saveFile = async (
   return filePath;
 };
 
-export const decompressZipped = async (zipPath: string) => {
-  console.log("Extracting zip... ⌛");
+export const getChosenSubtitle = async (data: Subtitle[]) => {
+  const options = data
+    .toSorted(
+      (a, b) =>
+        a.attributes.feature_details.season_number
+          ?.toString()
+          .localeCompare(
+            b.attributes.feature_details.season_number?.toString()
+          ) ||
+        a.attributes.feature_details.episode_number -
+          b.attributes.feature_details.episode_number
+    )
+    .map(makeSubSelectionPrompt);
 
-  const command = new Deno.Command("unzip", {
-    args: [zipPath, "-d", TEMP_DIR],
-  });
-
-  const { success, stderr } = await command.output();
-
-  if (!success) {
-    console.log(
-      "Something went wrong when extracting the zip file \n. Do you have unzip on you'r system ?",
-      new TextDecoder().decode(stderr)
-    );
-  }
-
-  await Deno.remove(zipPath);
-};
-
-export const processSubtitleFiles = async (renameString?: string) => {
-  console.log("Processing Subtitle...⌛");
-
-  const parentDirPath = await Deno.realPath("./");
-  const tempSubDirEntries = walk(TEMP_DIR);
-
-  let episodeNumber = "";
-
-  for await (const entry of tempSubDirEntries) {
-    if (entry.isDirectory) {
-      const dirnameNumber = entry.name.match(/[0-9]/g)?.join("");
-      if (dirnameNumber) {
-        episodeNumber =
-          dirnameNumber.length > 1 ? dirnameNumber : `0${dirnameNumber}`;
-      }
-    }
-
-    if (entry.isFile) {
-      const renameStringIndexed = renameString?.replace("%I%", episodeNumber);
-      const extension = getExtension(entry.path);
-      const newFileName = renameStringIndexed
-        ? `${renameStringIndexed}.${extension}`
-        : entry.name;
-
-      const newFilePath = join(parentDirPath, newFileName);
-
-      await Deno.rename(entry.path, newFilePath);
-    }
-  }
-
-  await Deno.remove(TEMP_DIR, { recursive: true });
-};
-
-export const getChosenSubtitle = async (data: Datum[]) => {
   const chosenSubtitle = await cliffy.Checkbox.prompt({
-    message: "Choose which subtitle to download",
-    options: data
-      .toSorted(
-        (a, b) =>
-          a.attributes.feature_details.season_number
-            ?.toString()
-            .localeCompare(
-              b.attributes.feature_details.season_number?.toString()
-            ) ||
-          a.attributes.feature_details.episode_number -
-            b.attributes.feature_details.episode_number
-      )
-      .map((subtitle) => {
-        const fileID = subtitle.attributes.files[0].file_id;
-        const mainTitle = subtitle.attributes.feature_details.parent_title;
-        const episode = subtitle.attributes.feature_details.episode_number;
-        const episodeTitle = subtitle.attributes.feature_details.title;
-        const season = subtitle.attributes.feature_details.season_number;
-
-        return {
-          value: { fileID, episode },
-          episode,
-          name: `${mainTitle ? `${mainTitle} : ` : ""}${
-            season
-              ? "S" +
-                season.toLocaleString("en-US", {
-                  minimumIntegerDigits: 2,
-                }) +
-                "-"
-              : ""
-          }${
-            episode
-              ? "E" +
-                episode.toLocaleString("en-US", { minimumIntegerDigits: 2 }) +
-                " "
-              : ""
-          }${colors.colors.yellow(episodeTitle)}`,
-        };
-      }),
-    check: colors.colors.green("󰄯"),
-    uncheck: "󰄰",
-    hint: `Press ${colors.colors.blue("<space> 󱁐")} to select subtitle`,
     info: true,
+    options,
+    uncheck: "󰄰",
+    maxOptions: 25, // due to open subtitle
+    check: colors.colors.green("󰄯"),
+    message: "Choose which subtitle to download",
+    hint: `Press ${colors.colors.blue("<space> 󱁐")} to select subtitle`,
   });
+
   return chosenSubtitle as unknown as { episode?: number; fileID: number }[];
+};
+
+const makeSubSelectionPrompt = (subtitle: Subtitle) => {
+  const fileID = subtitle.attributes.files[0].file_id;
+  const mainTitle = subtitle.attributes.feature_details.parent_title;
+  const episode = subtitle.attributes.feature_details.episode_number;
+  const episodeTitle = subtitle.attributes.feature_details.title;
+  const season = subtitle.attributes.feature_details.season_number;
+
+  return {
+    value: { fileID, episode },
+    name: `${mainTitle ? `${mainTitle} : ` : ""}${
+      season
+        ? "S" +
+          season.toLocaleString("en-US", {
+            minimumIntegerDigits: 2,
+          }) +
+          "-"
+        : ""
+    }${
+      episode
+        ? "E" +
+          episode.toLocaleString("en-US", { minimumIntegerDigits: 2 }) +
+          " "
+        : ""
+    }${colors.colors.yellow(episodeTitle)}`,
+  };
+};
+
+export const getChosenToshoAttachments = async (
+  toshoResults: ToshoResult[]
+) => {
+  const options = toshoResults.map((option) => ({
+    value: { animeId: option.id, title: option.title },
+    name: option.title,
+  }));
+
+  const chosenAttachments = await cliffy.Select.prompt({
+    options,
+    message: "Get attachments from ?",
+    search: true
+  });
+
+  return chosenAttachments as unknown as { animeId: number; title: string };
 };
 
 export const showAppName = async () => {

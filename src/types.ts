@@ -40,10 +40,10 @@ export interface SearchData {
   total_count: number;
   per_page: number;
   page: number;
-  data: Datum[];
+  data: Subtitle[];
 }
 
-export interface Datum {
+export interface Subtitle {
   id: string;
   type: string;
   attributes: Attributes;
@@ -119,3 +119,34 @@ export interface DownloadParams {
     fileId: number;
     renameTo?: string;
 }
+
+export interface ToshoResult {
+  id: number
+  title: string
+  link: string
+  timestamp: number
+  status: string
+  tosho_id: any
+  nyaa_id: number
+  nyaa_subdom: any
+  anidex_id: any
+  torrent_url: string
+  torrent_name: string
+  info_hash: string
+  info_hash_v2: any
+  magnet_uri: string
+  seeders: number
+  leechers: number
+  torrent_downloaded_count: number
+  tracker_updated?: number
+  nzb_url: string
+  total_size: number
+  num_files: number
+  anidb_aid: number
+  anidb_eid: any
+  anidb_fid: any
+  article_url: any
+  article_title: any
+  website_url?: string
+}
+

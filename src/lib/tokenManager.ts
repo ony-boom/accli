@@ -1,4 +1,4 @@
-import { tokenFilePath } from "../config/mod.ts";
+import { tokenFilePath } from "@config";
 import { existsSync } from "@deps";
 
 export const setAuthToken = async (token: string) => {

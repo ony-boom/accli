@@ -1,7 +1,8 @@
-import { SearchData, SearchParams } from "@types";
-import { client } from "./client.ts";
 import { spinner } from "@lib";
-import { colors } from "@deps";
+import { client } from "./client.ts";
+import { colors, cliffy, axiod } from "@deps";
+import { downloadToshoAttachments } from "./download.ts";
+import { SearchData, SearchParams, ToshoResult } from "@types";
 
 export const search = async ({
   query,
@@ -37,15 +38,26 @@ export const search = async ({
     } = await client.get<SearchData>("/subtitles", {
       params: { query, languages: ln, ...queryParams },
     });
-
+    spinner.stop();
     if (searchResult.length === 0) {
-      console.error("No subtitle for this one 🥲");
-      Deno.exit(1);
+      const searchWithAnimeTosho = await cliffy.Confirm.prompt({
+        message: `No sub for "${query}" on open subtitle. Would you like to search ${colors.colors.blue(
+          "attachments"
+        )} on animeTosho ?`,
+      });
+
+      if (!searchWithAnimeTosho) {
+        Deno.exit(1);
+      }
+
+      await animeToshoSearch(query, ln);
     }
 
     spinner.stop();
     return searchResult;
   } catch (e) {
+    console.log(e);
+
     if (e.message?.startsWith("error sending request for url")) {
       console.error(
         colors.colors.red(
@@ -67,6 +79,31 @@ export const search = async ({
     }
 
     Deno.exit(1);
+  }
+};
+
+const animeToshoSearch = async (query: string, languages: string) => {
+  spinner.stop();
+  spinner.text = `Searching through ${colors.colors.blue("animeTosho")}`;
+  spinner.start();
+  try {
+    const url = "https://feed.animetosho.org/json";
+
+    const { data: toshoResult } = await axiod.get<ToshoResult[]>(url, {
+      params: {
+        q: query,
+      },
+    });
+    if (toshoResult.length < 1) {
+      spinner.fail(
+        "Really at this point i don't know where to find the subtitle, just give up already 👀"
+      );
+      Deno.exit(1);
+    }
+    await downloadToshoAttachments(toshoResult, languages);
+  } catch (e) {
+    // handle error on the search function
+    throw e;
   }
 };
 

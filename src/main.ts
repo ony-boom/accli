@@ -1,8 +1,8 @@
 import { tweaks } from "@config";
 import { cliffy, colors } from "@deps";
-import { download, search } from "@api";
+import { subDownload, search } from "@api";
 import { getChosenSubtitle, showAppName } from "@lib";
-import { Datum } from "@types";
+import { Subtitle } from "@types";
 
 console.log("\n");
 await showAppName();
@@ -30,7 +30,7 @@ const queryParams = await cliffy.prompt([
 const searchResult = (await search({
   query: queryParams.query!,
   ln: queryParams.ln,
-})) as Datum[];
+})) as Subtitle[];
 
 if (searchResult.length > 0) {
   const chosenSubtitle = await getChosenSubtitle(searchResult);
@@ -49,7 +49,7 @@ if (searchResult.length > 0) {
       renameTo = renameFileTo.replace("%I%", episode?.toString() || "");
     }
 
-    return download({ fileId: fileID, path: "./", renameTo });
+    return subDownload({ fileId: fileID, path: "./", renameTo });
   });
 
   await Promise.allSettled(chosenDownload).then(() => Deno.exit());

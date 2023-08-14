@@ -4,12 +4,12 @@ Another useless cli, just to download anime subtitle XD
 
 ## Usage
 
-![Usage](./demo.gif)
+![Usage](./docs/assets/demo.gif)
 
 ## Config ⚙️
 
 Config file at `~/accli.toml`
-See [config.example.toml]
+See [config example](./config.example.toml)
 
 ## Dependency
 
@@ -18,4 +18,3 @@ See [config.example.toml]
 ## TODO
 
 - [ ] Add support for [anime tosho](https://animetosho.org/) attachments file
-
