@@ -31,7 +31,7 @@ export const downloadToshoAttachments = async (
 
   const saved = await download(downloadLink, {
     dir: TEMP_DIR,
-    file: `${title}.7z`,
+    file: "subtitle.7z",
   });
 
   spinner.stop();
