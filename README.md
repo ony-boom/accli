@@ -17,4 +17,5 @@ See [config example](./config.example.toml)
 
 ## TODO
 
-- [ ] Add support for [anime tosho](https://animetosho.org/) attachments file
+- [X] Add support for [anime tosho](https://animetosho.org/) attachments file
+- [ ] Better error handling
