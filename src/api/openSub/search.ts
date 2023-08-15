@@ -56,8 +56,6 @@ export const openSubSearch = async ({
     spinner.stop();
     return searchResult;
   } catch (e) {
-    console.log(e);
-
     if (e.message?.startsWith("error sending request for url")) {
       console.error(
         ansi.colors.red(
