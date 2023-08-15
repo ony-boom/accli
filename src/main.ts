@@ -1,48 +1,23 @@
-import { tweaks } from "@config";
-import { cliffy, colors } from "@deps";
-import { subDownload, search } from "@api";
-import { getChosenSubtitle, showAppName } from "@lib";
+import { subDownload, openSubSearch } from "@api";
+import { showAppName } from "@lib";
 import { Subtitle } from "@types";
+import { animePrompt, animeSubtitleCheckPrompt, renamePrompt } from "@prompts";
 
 console.log("\n");
 await showAppName();
 
-const queryParams = await cliffy.prompt([
-  {
-    type: cliffy.Input,
-    name: "query",
-    message: "Anime name",
-    validate(value) {
-      return Boolean(value);
-    },
-  },
+const queryParams = await animePrompt();
 
-  {
-    name: "ln",
-    type: cliffy.Select,
-    options: tweaks.language?.list || ["fr", "en"],
-    message: "Subtitle language",
-    default: tweaks.language?.default || "en",
-    pointer: "",
-  },
-]);
-
-const searchResult = (await search({
+const searchResult = (await openSubSearch({
   query: queryParams.query!,
   ln: queryParams.ln,
-})) as Subtitle[];
+})) satisfies Subtitle[];
 
 if (searchResult.length > 0) {
-  const chosenSubtitle = await getChosenSubtitle(searchResult);
+  const subtitles = await animeSubtitleCheckPrompt(searchResult);
+  const renameFileTo = await renamePrompt();
 
-  const renameFileTo = await cliffy.Input.prompt({
-    message: "Rename downloaded subtitle to ?",
-    hint: colors.colors.gray(
-      `${colors.colors.italic("%I%")} will be replaced by episode number`
-    ),
-  });
-
-  const chosenDownload = chosenSubtitle.map(({ fileID, episode }) => {
+  const chosenDownload = subtitles.map(({ fileID, episode }) => {
     let renameTo: string | undefined;
 
     if (renameFileTo) {

@@ -1,7 +1,7 @@
-import { setAuthToken } from "@lib";
 import { AuthPostData, AuthResponse } from "@types";
 import { config } from "@config";
-import { client } from "./client.ts";
+import { client } from "../client.ts";
+import { setAuthToken } from "./token.ts";
 
 export const auth = async () => {
   const authData: AuthPostData = {

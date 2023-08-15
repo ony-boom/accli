@@ -1,10 +1,10 @@
 import { spinner } from "@lib";
-import { client } from "./client.ts";
-import { colors, cliffy, axiod } from "@deps";
-import { downloadToshoAttachments } from "./download.ts";
-import { SearchData, SearchParams, ToshoResult } from "@types";
+import { client } from "../client.ts";
+import { ansi, cliffy } from "@deps";
+import { SearchData, SearchParams } from "@types";
+import { animeToshoSearch } from "../animeTosho/search.ts";
 
-export const search = async ({
+export const openSubSearch = async ({
   query,
   ln = "en",
   episode,
@@ -41,7 +41,7 @@ export const search = async ({
     spinner.stop();
     if (searchResult.length === 0) {
       const searchWithAnimeTosho = await cliffy.Confirm.prompt({
-        message: `No sub for "${query}" on open subtitle. Would you like to search ${colors.colors.blue(
+        message: `No sub for "${query}" on open subtitle. Would you like to search ${ansi.colors.blue(
           "attachments"
         )} on animeTosho ?`,
       });
@@ -60,7 +60,7 @@ export const search = async ({
 
     if (e.message?.startsWith("error sending request for url")) {
       console.error(
-        colors.colors.red(
+        ansi.colors.red(
           "\nYou are offline 😭, Try again when you are connected"
         )
       );
@@ -68,42 +68,17 @@ export const search = async ({
 
     if (isSearchError(e)) {
       console.error(
-        colors.colors.red(
+        ansi.colors.red(
           `\nSomething went wrong 😿, it seems that the ${e.response.data.errors.join(
             ","
           )}`
         )
       );
     } else {
-      console.error(colors.colors.red("\nSomething went wrong 😿"));
+      console.error(ansi.colors.red("\nSomething went wrong 😿"));
     }
 
     Deno.exit(1);
-  }
-};
-
-const animeToshoSearch = async (query: string, languages: string) => {
-  spinner.stop();
-  spinner.text = `Searching through ${colors.colors.blue("animeTosho")}`;
-  spinner.start();
-  try {
-    const url = "https://feed.animetosho.org/json";
-
-    const { data: toshoResult } = await axiod.get<ToshoResult[]>(url, {
-      params: {
-        q: query,
-      },
-    });
-    if (toshoResult.length < 1) {
-      spinner.fail(
-        "Really at this point i don't know where to find the subtitle, just give up already 👀"
-      );
-      Deno.exit(1);
-    }
-    await downloadToshoAttachments(toshoResult, languages);
-  } catch (e) {
-    // handle error on the search function
-    throw e;
   }
 };
 

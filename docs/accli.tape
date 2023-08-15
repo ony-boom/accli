@@ -1,3 +1,5 @@
+# This is the file used to record the cli. See "Charm's VHS"
+
 Output demo.gif
 
 Set WindowBar Colorful

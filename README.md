@@ -9,7 +9,7 @@ Another useless cli, just to download anime subtitle XD
 ## Config ⚙️
 
 Config file at `~/accli.toml`
-See [config example](./config.example.toml)
+See [config example](./docs/config.example.toml)
 
 ## Dependency
 
