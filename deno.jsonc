@@ -8,6 +8,7 @@
     "@types": "./src/types.ts",
     "@lib": "./src/lib/mod.ts",
     "@config": "./src/config/mod.ts",
-    "@api": "./src/api/mod.ts"
+    "@api": "./src/api/mod.ts",
+    "@prompts": "./src/prompts/mod.ts"
   }
 }
