@@ -1,7 +1,7 @@
 {
   "tasks": {
-    "dev": "deno run --watch ./src/main.ts -A",
-    "build": "deno compile ./src/main.ts -o=./accli --allow-all"
+    "dev": "deno run --watch ./src/main.ts",
+    "build": "deno compile --allow-all --output accli ./src/main.ts"
   },
   "imports": {
     "@deps": "./deps.ts",

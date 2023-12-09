@@ -15,6 +15,7 @@ export const auth = async () => {
       authData
     );
 
+
     await setAuthToken(authResponse.token);
 
     console.log("Authenticated ✅");

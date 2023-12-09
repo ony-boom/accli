@@ -1,5 +1,6 @@
 import { tokenFilePath } from "@config";
 import { existsSync } from "@deps";
+import { auth } from "./auth.ts";
 
 export const setAuthToken = async (token: string) => {
   try {
@@ -20,6 +21,9 @@ export const setAuthToken = async (token: string) => {
 };
 
 export const getToken = async () => {
+  if (!hasToken()) {
+    await auth();
+  }
   return await Deno.readTextFile(tokenFilePath);
 };
 

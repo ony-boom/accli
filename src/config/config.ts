@@ -24,11 +24,7 @@ const configSchema = z.object({
     apiKey: z.string(),
     username: z.string(),
     password: z.string(),
-    tokenPath: z.optional(
-      z
-        .string()
-        .default(join(os.homeDir() || "~/", ".config", "accli", "token.txt"))
-    ),
+    tokenPath: z.optional(z.string()),
   }),
   tweaks: z.object({
     appName: z.optional(z.string()),
