@@ -2,13 +2,13 @@
 apiKey = "<OPEN SUBTITLE API KEY>"
 username = "<OPEN SUBTITLE USERNAME>"
 password = "<OPEN SUBTITLE PASSWORD>"
-tokenPath = "<WHERE TO STORE TOKEN AFTER AUTH>" # default to : "~/.accli_token.txt"
+tokenPath = "<WHERE TO STORE TOKEN AFTER AUTH>" # default to : "~/.config/accli/token.txt"
 
 [tweaks]
-appName = "accli" # The ascii art to show at startup
-showAppName = true # show the ascii art
+appName = "accli"         # The ascii art to show at startup
+showAppName = true        # show the ascii art
 asciiFont = "ANSI Shadow" # the font to use see `https://asciified.thelicato.io/`
 
 [tweaks.language]
 list = ["en", "fr"] # All language to show when searching subtitle
-default = "fr" # the default checked language
+default = "fr"      # the default checked language
